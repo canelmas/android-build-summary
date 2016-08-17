@@ -48,7 +48,7 @@ Display of data in a lovely way
             "uses-permission: name='android.permission.ACCESS_FINE_LOCATION'", 
             "uses-permission: name='android.permission.READ_PHONE_STATE'", 
             "uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE'", 
-            "permission: com.pozitron.pegasus.localDebug.permission.C2D_MESSAGE", 
+            "permission: com.pozitron.sample.localDebug.permission.C2D_MESSAGE", 
             "uses-permission: name='com.pozitron.pegasus.localDebug.permission.C2D_MESSAGE'", 
             "uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'"
         ]
