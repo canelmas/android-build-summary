@@ -1,1 +1,4 @@
 .idea
+*.apk
+*.pyc
+*.DS_Store
