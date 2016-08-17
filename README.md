@@ -24,7 +24,7 @@ job as a post build step.
 
 # Generated Json
 
-'''js
+```json
 {
     "apk": {
         "methodCount": 40046, 
@@ -396,4 +396,4 @@ job as a post build step.
     }
 
 }
-'''
+```
