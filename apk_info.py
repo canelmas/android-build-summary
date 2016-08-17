@@ -1,121 +1,94 @@
 #!/usr/bin/python
 import os
+import shlex
 import subprocess
+import re
 
 
 class ApkInfo:
-  method_count = None
-  apk_size = None
-  permissions = None
-  max_count = None
-  min_sdk_version = None
-  target_sdk_version = None
+    @staticmethod
+    def fetch(main_module, build_variant):
 
-  def __init__(self, method_count=0, apk_size=0, permissions=None, min_sdk=0, target_sdk=0):
-    self.method_count = method_count
-    self.apk_size = apk_size
-    self.permissions = permissions
-    self.max_count = 65536
-    self.min_sdk_version = min_sdk
-    self.target_sdk_version = target_sdk
+        # apk_folder_path = os.path.join(main_module, 'build', 'outputs', 'apk')
+        apk_folder_path = os.path.join('sample', main_module, 'build', 'outputs', 'apk')
 
-  @classmethod
-  def new_info(cls, apk_folder_path):
+        # we're expecting only one apk
+        apk_file = [i for i in os.listdir(apk_folder_path) if  re.match(r'.*' + build_variant + '.apk', i)]
+        if len(apk_file) is 0:
+            raise Exception('Can\'t find apk related to given build variant [' + build_variant + ']')
 
-    classes_dex_path = apk_folder_path + '/classes.dex'
-    method_count = subprocess.Popen(
-        'cat ' + classes_dex_path + ' | head -c 92 | tail -c 4 | hexdump -e \'1/4 "%d\n"\'',
-        shell=True,
-        stdout=subprocess.PIPE
-    ).stdout.read()
+        apk_path = os.path.join(apk_folder_path, apk_file[0])
 
-    method_count = long(float(method_count))
+        # method count
+        classes_dex_path = os.path.join('sample', main_module, 'build', 'intermediates', 'dex',
+                                        *build_variant.split('-'))
+        classes_dex_path = classes_dex_path + '/classes.dex'
+        method_count = subprocess.Popen(
+            'cat ' + classes_dex_path + ' | head -c 92 | tail -c 4 | hexdump -e \'1/4 "%d\n"\'',
+            shell=True,
+            stdout=subprocess.PIPE
+        ).stdout.read()
 
-    apk_path = apk_folder_path + "/app-release.apk"
-    # Apk size
-    apk_size = os.path.getsize(apk_path)
+        method_count = long(method_count)
 
-    # Permissions
-    permissions = subprocess.check_output(["aapt", "d", "permissions", apk_path]).split("\n")
+        # Apk size
+        apk_size = to_mb(os.path.getsize(apk_path))
 
-    # First item is package name, no need
-    del permissions[0]
+        # Permissions
+        cmd_perms = "aapt d permissions {}".format(apk_path)
+        permissions = subprocess.check_output(shlex.split(cmd_perms)).split("\n")
 
-    # Last item is None, remove it
-    del permissions[len(permissions) - 1]
+        # App id
+        app_id = permissions[0].split(':')[1][1:]
+        del permissions[0]
 
-    # Sdk versions
-    min_sdk = ApkInfo.sdk_version(apk_path, 'minSdkVersion')
-    target_sdk = ApkInfo.sdk_version(apk_path, 'targetSdkVersion')
+        # Last item is None, remove it
+        del permissions[len(permissions) - 1]
 
-    return cls(method_count, apk_size, permissions, min_sdk, target_sdk)
+        # Min sdk
+        min_sdk = sdk_version(apk_path, 'minSdkVersion')
 
-  @staticmethod
-  def sdk_version(apk_path, name):
-    sdk_version = subprocess.Popen(
+        # Target sdk
+        target_sdk = sdk_version(apk_path, 'targetSdkVersion')
+
+        # Version Name
+        version_name = version_info_name(apk_path)
+
+        # Version Code
+        version_code = version_info_code(apk_path)
+
+        return {"apk": {'apkSize': apk_size,
+                        'appId': app_id,
+                        'methodCount': method_count,
+                        'minSdk': min_sdk,
+                        'permissions': permissions,
+                        'targetSdk': target_sdk,
+                        'versionCode': version_code,
+                        'versionName': version_name,
+                        'buildVariant': build_variant}}
+
+
+def sdk_version(apk_path, name):
+    version = read_property(apk_path, name)
+    return int(version.split('=')[1].split(')')[1], 16)
+
+
+def version_info_name(apk_path):
+    version_name = read_property(apk_path, 'versionName')
+    return version_name[version_name.index('Raw') + 6:-3]
+
+
+def version_info_code(apk_path):
+    version_code = read_property(apk_path, 'versionCode')
+    return int(version_code.split('=')[1].split(')')[1], 16)
+
+
+def read_property(apk_path, name):
+    return subprocess.Popen(
         'aapt list -a ' + apk_path + ' | grep ' + name,
         shell=True,
         stdout=subprocess.PIPE
     ).stdout.read()
 
-    return int(sdk_version.split('=')[1].split(')')[1], 16)
-
-  def __str__(self):
-    return "method_count : " + str(self.method_count) + \
-           ", apk_size : " + str(self.apk_size) + \
-           ", permissions : " + str(self.permissions)
-
-  def remaining_method_count(self):
-    return self.max_count - self.method_count
-
-  def apk_size_in_mb(self):
-    return self.apk_size / float(1000 * 1000)
-
-  def apk_size_in_mb_formatted(self):
-    return "{:20.4}".format(str(self.apk_size_in_mb()))
-
-  def apk_size_diff(self, info):
-    diff = self.apk_size - info.apk_size
-    return "{:20.4}".format(str(diff / float(1000 * 1000)))
-
-  def permissions_diff(self, info):
-    list = []
-
-    compared_permissions = info.permissions
-
-    for item in self.permissions:
-      permission = str(item)
-      if permission in compared_permissions:
-        list.append(PermissionInfo.no_change(permission))
-      else:
-        list.append(PermissionInfo.new_added(permission))
-
-    for item in compared_permissions:
-      permission = str(item)
-      if permission not in self.permissions:
-        list.append(PermissionInfo.deleted(permission))
-
-    return list
-
-
-class PermissionInfo:
-  name = None
-  deleted = None
-  new_added = None
-
-  def __init__(self, name, deleted, new_added):
-    self.name = name
-    self.deleted = deleted
-    self.new_added = new_added
-
-  @classmethod
-  def deleted(cls, name):
-    return cls(name, False, True)
-
-  @classmethod
-  def new_added(cls, name):
-    return cls(name, True, False)
-
-  @classmethod
-  def no_change(cls, name):
-    return cls(name, False, False)
+def to_mb(byte, bsize=1024):
+    return "{:.5}".format(float(byte / (bsize * bsize)))
