@@ -3,8 +3,8 @@ Aggregates various android project information and generates json.
 
 # Why?
 If you sit on bunch of android apps you may find yourself or your teammates asking questions like, 
-Are we targeting 23 on project x? What's the usage of gradle plugin 1.3.1 in our projects? Which of 
-our projects are asking GET_ACCOUNTS? Do we have any app with minSdk different than 19? and many 
+_Are we targeting 23 on project x?_ _What's the usage of gradle plugin 1.3.1 in our projects?_ _Which of 
+our projects are asking GET_ACCOUNTS?_ _Do we have any app with minSdk different than 19?_ and many 
 many more...
  
 With this work and additional ones to come in near future, we're trying to come to a point where we 
@@ -19,12 +19,12 @@ As part of our internal build process, the summary information is generated duri
 job as a post build step.
  
 # What's next?
-Simple lovely summary rest api - projects info display based on any property
-Display of data in a lovely way
+* Simple lovely summary rest api
+* Display of data in a lovely way - projects info summary based on any property
 
 # Generated Json
 
-'''json
+'''js
 {
     "apk": {
         "methodCount": 40046, 
@@ -396,5 +396,4 @@ Display of data in a lovely way
     }
 
 }
-
 '''
