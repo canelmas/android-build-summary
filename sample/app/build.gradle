@@ -1,0 +1,92 @@
+apply plugin: 'io.fabric'
+apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'retrofitted'
+
+monitise {
+    projectName = "xxxxxx"
+}
+
+android {
+    compileSdkVersion $rootProject.compileSdkVersion
+    buildToolsVersion $rootProject.buildToolsVersion
+    compileSdkVersion rootProject.compileSdkVersion
+    buildToolsVersion rootProject.buildToolsVersion
+    compileSdkVersion 23
+    buildToolsVersion '23.0.1'
+    buildToolsVersion "24.0.1"
+
+    defaultConfig {
+        applicationId "com.canelmas.sample"
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
+        resConfig "tr"
+    }
+}
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
+    compile "com.android.support:cardview-v7:$rootProject.ext.supportLibVersion"
+    compile "com.android.support:recyclerview-v7:$rootProject.ext.supportLibVersion"
+    compile "com.android.support:design:$rootProject.ext.supportLibVersion"
+
+    compile ('com.canelmas.deps:lovely-core:2.2.0@aar') {
+        exclude (group: 'com.canelms.deps:lovely-network:1.6.0')
+    }
+    compile 'com.canelmas.deps:loveley-ui:2.0.0@aar'
+    compile 'com.canelmas.deps:loveley-mvp:3.1.0@aar'
+    compile 'com.canelmas.deps:lovely-util:3.3.0@aar'
+    compile 'com.canelmas.deps:lovellyfit:1.0.0'
+    compile 'com.canelmas.deps:lovelybus:1.0.0'
+
+    compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
+        transitive = true;
+    }
+
+    //Play services
+    compile "com.google.android.gms:play-services-base:$rootProject.ext.playServicesVersion"
+    compile "com.google.android.gms:play-services-analytics:$rootProject.ext.playServicesVersion"
+
+    //Firebase
+    compile "com.google.firebase:firebase-core:$rootProject.ext.firebaseVersion"
+    compile "com.google.firebase:firebase-messaging:$rootProject.ext.firebaseVersion"
+
+    //Dagger
+    apt 'com.google.dagger:dagger-compiler:2.2'
+    compile 'com.google.dagger:dagger:2.2'
+    provided 'org.glassfish:javax.annotation:10.0-b28'
+
+    //Butter Knife
+    compile 'com.jakewharton:butterknife:8.0.1'
+    apt 'com.jakewharton:butterknife-compiler:8.0.1'
+
+    //Eventbus
+    compile 'org.greenrobot:eventbus:3.0.0'
+
+    //FragmentArgs
+    compile 'com.hannesdorfmann.fragmentargs:annotation:3.0.2'
+    apt 'com.hannesdorfmann.fragmentargs:processor:3.0.2'
+
+    //Icepick
+    compile 'frankiesardo:icepick:3.2.0'
+    provided 'frankiesardo:icepick-processor:3.2.0'
+
+    //Joda-Time
+    compile 'net.danlew:android.joda:2.9.3.1'
+
+    //Sticky Header Recycler View
+    compile 'com.timehop.stickyheadersrecyclerview:library:0.4.3'
+
+    //Smart Tab Layout
+    compile 'com.ogaclejapan.smarttablayout:library:1.6.1@aar'
+
+    // Fresco
+    compile 'com.facebook.fresco:fresco:0.10.0'
+
+    //RxJava
+    compile 'io.reactivex:rxjava:1.1.5'
+    compile 'io.reactivex:rxandroid:1.2.0'
+
+    //RxBinding
+    compile 'com.jakewharton.rxbinding:rxbinding-appcompat-v7:0.4.0'
+}
+

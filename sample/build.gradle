@@ -1,0 +1,38 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url 'http://maven.pozitron.com/repository/pozitron/' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.2'
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+    }
+}
+
+allprojects {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    }
+}
+
+
+ext          {
+    a = 16
+    b= 23
+    c= "23.0.3"
+    d= 23
+    e= "23.3.0"
+    f= "9.0.2"
+    g = "9.0.2"
+}
+
+ext.minSdkVersion = 16
+ext.compileSdkVersion = 23
+ext.buildToolsVersion = "23.0.3"
+ext.targetSdkVersion = 23
+ext.supportLibVersion = "23.3.0"
+ext.playServicesVersion = "9.0.2"
+ext.firebaseVersion = "7.7.7"
