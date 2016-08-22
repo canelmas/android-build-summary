@@ -15,6 +15,7 @@ REGEX_PROPS = '\s+(compileSdkVersion|buildToolsVersion)\s+\$?\'?\"?([\w\.\-]+)\'
 
 extra_props = {}
 
+
 class BuildInfo:
     @staticmethod
     def fetch():
@@ -22,15 +23,39 @@ class BuildInfo:
         build_info = {}
 
         # root gradle info
-        build_info.update(root_build_gradle_info())
+        build_info.update(process_root_module())
 
-        # dependencies & other info i.e. compileSdkVersion, buildToolsVersion..
-        build_info.update(dependencies())
+        # module dependencies & other info e.g. compileSdkVersion, buildToolsVersion..
+        process_modules(build_info)
 
-        return {"build" : build_info}
+        return {"build": build_info}
 
 
-def dependencies():
+def process_root_module():
+    global extra_props
+    deps = {'deps': []}
+    with open('sample/build.gradle', 'r') as f:
+        reg = re.compile(REGEX_EXTRA_PROPS, re.MULTILINE)
+        reg_dep = re.compile(REGEX_DEP_1, re.MULTILINE)
+        for line in f:
+
+            # process extra properties
+            match = reg.match(line)
+            if match:
+                data = re.split('=', match.group().replace('ext.', '').replace(' ', ''))  # todo
+                extra_props[data[0]] = data[1]
+
+            # process root dependencies
+            match = reg_dep.match(line)
+            if match:
+                deps['deps'] += [{'config': match.group(1),
+                                  'group': match.group(2),
+                                  'name': match.group(3),
+                                  'version': match.group(4)}]
+    return deps
+
+
+def process_modules(json):
     with open(SETTINGS_GRADLE) as f:
         modules_found = []
         for line in f:
@@ -40,12 +65,10 @@ def dependencies():
                 modules = re.findall(r'[:\w+]+', line)
                 modules_found.extend(modules)
 
-        deps = {'deps': []}
-
         for module in modules_found:
-            process_module(os.path.join('sample', module), deps)
+            process_module(os.path.join('sample', module), json)
 
-        return deps
+        return json
 
 
 def process_module(module, json):
@@ -65,7 +88,7 @@ def process_module_dependencies(f, module, json):
         if match:
             version = match.group(4)
             if version.startswith(("$", "rootProject")):
-                version = extra_props[version.split('.')[-1]].replace("\"","")
+                version = extra_props[version.split('.')[-1]].replace("\"", "")
             json['deps'] += [{'config': match.group(1),
                               'group': match.group(2),
                               'name': match.group(3),
@@ -77,27 +100,4 @@ def process_module_dependencies(f, module, json):
             value = match.group(2)
             if value.startswith(("$", "rootProject")):
                 value = extra_props[value.split('.')[-1]]
-            json.update({match.group(1) : value.replace('\"', '')})
-
-
-
-def root_build_gradle_info():
-    global extra_props
-    deps = {'classpath': []}
-    with open('sample/build.gradle', 'r') as f:
-        reg = re.compile(REGEX_EXTRA_PROPS, re.MULTILINE)
-        reg_dep = re.compile(REGEX_DEP_1, re.MULTILINE)
-        for line in f:
-
-            match = reg.match(line)
-            if match:
-                data = re.split('=', match.group().replace('ext.', '').replace(' ', ''))  # todo
-                extra_props[data[0]] = data[1]
-
-            match = reg_dep.match(line)
-            if match:
-                deps['classpath'] += [{'config': match.group(1),
-                          'group': match.group(2),
-                          'name': match.group(3),
-                          'version': match.group(4)}]
-    return deps
+            json.update({match.group(1): value.replace('\"', '')})
