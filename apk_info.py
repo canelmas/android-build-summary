@@ -42,8 +42,9 @@ class ApkInfo:
         app_id = permissions[0].split(':')[1][1:]
         del permissions[0]
 
-        # Last item is None, remove it
-        del permissions[len(permissions) - 1]
+        # Beautify permissions
+        regex = re.compile("name=\'(\S+)\'")
+        permissions = [m.group(1) for l in permissions for m in [regex.search(l)] if m]
 
         # Min sdk
         min_sdk = sdk_version(apk_path, 'minSdkVersion')
