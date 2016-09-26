@@ -66,7 +66,7 @@ def process_modules(json):
                 modules_found.extend(modules)
 
         for module in modules_found:
-            process_module(os.path.join('sample', module), json)
+            process_module(module, json)
 
         return json
 
