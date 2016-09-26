@@ -19,8 +19,14 @@ class ApkInfo:
         apk_path = os.path.join(apk_folder_path, apk_file[0])
 
         # method count
-        classes_dex_path = os.path.join(main_module, 'build', 'intermediates', 'dex', *build_variant.split('-'))
-        classes_dex_path = classes_dex_path + '/classes.dex'
+        classes_dex_folder = os.path.join(main_module, 'build', 'intermediates', 'dex', *build_variant.split('-'))
+        classes_dex_path = classes_dex_folder + '/classes.dex'
+
+        if not os.path.exists(classes_dex_path):
+            # >= 1.5.0
+            classes_dex_folder = os.path.join(main_module, 'build', 'intermediates', 'transforms', 'dex', *build_variant.split('-'))
+            classes_dex_path = classes_dex_folder + '/folders/1000/1f/main/classes.dex'
+
         method_count = subprocess.Popen(
             'cat ' + classes_dex_path + ' | head -c 92 | tail -c 4 | hexdump -e \'1/4 "%d\n"\'',
             shell=True,
