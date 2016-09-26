@@ -32,7 +32,7 @@ def summarize():
             print json.dumps(summary, indent=4)
 
             # send it
-            requests.put('http://localhost:3000/api/v1/projects',
+            requests.put('http://52.28.167.122/v1/projects',
                          data=json.dumps(summary),
                          headers={'Content-Type': 'application/json;charset=UTF-8'})
     else:
