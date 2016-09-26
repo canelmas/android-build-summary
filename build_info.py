@@ -2,7 +2,7 @@
 import os
 import re
 
-SETTINGS_GRADLE = 'sample/settings.gradle'
+SETTINGS_GRADLE = 'settings.gradle'
 BUILD_GRADLE = 'build.gradle'
 
 REGEX_MODULE = '\s*include\s*[\']:(\S+)[\']'
@@ -34,7 +34,7 @@ class BuildInfo:
 def process_root_module():
     global extra_props
     deps = {'deps': []}
-    with open('sample/build.gradle', 'r') as f:
+    with open('build.gradle', 'r') as f:
         reg = re.compile(REGEX_EXTRA_PROPS, re.MULTILINE)
         reg_dep = re.compile(REGEX_DEP_1, re.MULTILINE)
         for line in f:

@@ -9,8 +9,7 @@ class ApkInfo:
     @staticmethod
     def fetch(main_module, build_variant):
 
-        # apk_folder_path = os.path.join(main_module, 'build', 'outputs', 'apk')
-        apk_folder_path = os.path.join('sample', main_module, 'build', 'outputs', 'apk')
+        apk_folder_path = os.path.join(main_module, 'build', 'outputs', 'apk')
 
         # we're expecting only one apk
         apk_file = [i for i in os.listdir(apk_folder_path) if  re.match(r'.*' + build_variant + '.apk', i)]
@@ -20,8 +19,7 @@ class ApkInfo:
         apk_path = os.path.join(apk_folder_path, apk_file[0])
 
         # method count
-        classes_dex_path = os.path.join('sample', main_module, 'build', 'intermediates', 'dex',
-                                        *build_variant.split('-'))
+        classes_dex_path = os.path.join(main_module, 'build', 'intermediates', 'dex', *build_variant.split('-'))
         classes_dex_path = classes_dex_path + '/classes.dex'
         method_count = subprocess.Popen(
             'cat ' + classes_dex_path + ' | head -c 92 | tail -c 4 | hexdump -e \'1/4 "%d\n"\'',
