@@ -72,7 +72,7 @@ def process_modules(json):
 
 
 def process_module(module, json):
-    module = module.replace(':', '')
+    module = module.replace(':','/')[1:]
     with open(module + os.path.join(module, '/build.gradle')) as f:
         process_module_dependencies(f, module, json)
 
