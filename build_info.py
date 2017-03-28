@@ -61,8 +61,11 @@ def process_modules(json):
         for line in f:
             match = re.compile(REGEX_MODULE, re.VERBOSE).match(line)
             if match:
-                line = line.replace('include', '')
-                modules = re.findall(r'[:\w+]+', line)
+                # replace include, ' and , with empty string
+                for ch in ['include','\'', ',']:
+                    if ch in line:
+                        line=line.replace(ch,'')
+                modules = re.findall(r'[:\S+]+', line)
                 modules_found.extend(modules)
 
         for module in modules_found:

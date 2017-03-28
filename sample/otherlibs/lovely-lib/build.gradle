@@ -1,0 +1,39 @@
+apply plugin: 'retrofitted'
+
+monitise {
+    projectName = "YYYY"
+}
+
+android {
+    compileSdkVersion rootProject.compileSdkVersion
+    buildToolsVersion rootProject.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.canelmas.sample.lovelylib"
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
+        resConfig "en"
+        versionCode 2
+        versionName "2.3.0.4"
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
+    compile "com.android.support:cardview-v7:24.5.5"
+
+    //Play services
+    compile "com.google.android.gms:play-services-base:x.x.x"
+    compile "com.google.android.gms:play-services-analytics:24.4.5"
+
+    //Firebase
+    compile "com.google.firebase:firebase-core:$rootProject.ext.firebaseVersion"
+
+    //RxJava
+    compile 'io.reactivex:rxjava:1.1.5'
+
+    //RxBinding
+    compile 'com.jakewharton.rxbinding:rxbinding-appcompat-v7:0.4.0'
+
+}
