@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os
 import re
+import logging
 
 SETTINGS_GRADLE = 'settings.gradle'
 BUILD_GRADLE = 'build.gradle'
@@ -19,16 +20,20 @@ extra_props = {}
 class BuildInfo:
     @staticmethod
     def fetch():
+        try:
+            build_info = {}
 
-        build_info = {}
+            # root gradle info
+            build_info.update(process_root_module())
 
-        # root gradle info
-        build_info.update(process_root_module())
+            # module dependencies & other info e.g. compileSdkVersion, buildToolsVersion..
+            process_modules(build_info)
 
-        # module dependencies & other info e.g. compileSdkVersion, buildToolsVersion..
-        process_modules(build_info)
+            return {"build": build_info}
+        except:
+            logging.error('Constructing Build info failed')
+            raise
 
-        return {"build": build_info}
 
 
 def process_root_module():

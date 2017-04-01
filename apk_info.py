@@ -3,74 +3,75 @@ import os
 import shlex
 import subprocess
 import re
+import logging
 
 
 class ApkInfo:
     @staticmethod
     def fetch(main_module, build_variant):
+        try:
+            # look for the apk file path
+            apk_path = look_for_apk_file(main_module, build_variant)
 
-        apk_folder_path = os.path.join(main_module, 'build', 'outputs', 'apk')
+            if len(apk_path) is 0:
+                raise Exception('Can\'t find apk related to the given build variant {}'.format(build_variant))
 
-        # we're expecting only one apk
-        apk_file = [i for i in os.listdir(apk_folder_path) if  re.match(r'.*' + build_variant + '.apk', i)]
-        if len(apk_file) is 0:
-            raise Exception('Can\'t find apk related to given build variant [' + build_variant + ']')
+            # method count
+            classes_dex_folder = os.path.join(main_module, 'build', 'intermediates', 'dex', *build_variant.split('-'))
+            classes_dex_path = classes_dex_folder + '/classes.dex'
 
-        apk_path = os.path.join(apk_folder_path, apk_file[0])
+            if not os.path.exists(classes_dex_path):
+                # >= 1.5.0
+                classes_dex_folder = os.path.join(main_module, 'build', 'intermediates', 'transforms', 'dex', *build_variant.split('-'))
+                classes_dex_path = classes_dex_folder + '/folders/1000/1f/main/classes.dex'
 
-        # method count
-        classes_dex_folder = os.path.join(main_module, 'build', 'intermediates', 'dex', *build_variant.split('-'))
-        classes_dex_path = classes_dex_folder + '/classes.dex'
+            method_count = subprocess.Popen(
+                'cat ' + classes_dex_path + ' | head -c 92 | tail -c 4 | hexdump -e \'1/4 "%d\n"\'',
+                shell=True,
+                stdout=subprocess.PIPE
+            ).stdout.read()
 
-        if not os.path.exists(classes_dex_path):
-            # >= 1.5.0
-            classes_dex_folder = os.path.join(main_module, 'build', 'intermediates', 'transforms', 'dex', *build_variant.split('-'))
-            classes_dex_path = classes_dex_folder + '/folders/1000/1f/main/classes.dex'
+            method_count = long(method_count)
 
-        method_count = subprocess.Popen(
-            'cat ' + classes_dex_path + ' | head -c 92 | tail -c 4 | hexdump -e \'1/4 "%d\n"\'',
-            shell=True,
-            stdout=subprocess.PIPE
-        ).stdout.read()
+            # Apk size
+            apk_size = to_mb(os.path.getsize(apk_path))
 
-        method_count = long(method_count)
+            # Permissions
+            cmd_perms = "aapt d permissions {}".format(apk_path)
+            permissions = subprocess.check_output(shlex.split(cmd_perms)).split("\n")
 
-        # Apk size
-        apk_size = to_mb(os.path.getsize(apk_path))
+            # App id
+            app_id = permissions[0].split(':')[1][1:]
+            del permissions[0]
 
-        # Permissions
-        cmd_perms = "aapt d permissions {}".format(apk_path)
-        permissions = subprocess.check_output(shlex.split(cmd_perms)).split("\n")
+            # Beautify permissions
+            regex = re.compile("name=\'(\S+)\'")
+            permissions = [m.group(1) for l in permissions for m in [regex.search(l)] if m]
 
-        # App id
-        app_id = permissions[0].split(':')[1][1:]
-        del permissions[0]
+            # Min sdk
+            min_sdk = sdk_version(apk_path, 'minSdkVersion')
 
-        # Beautify permissions
-        regex = re.compile("name=\'(\S+)\'")
-        permissions = [m.group(1) for l in permissions for m in [regex.search(l)] if m]
+            # Target sdk
+            target_sdk = sdk_version(apk_path, 'targetSdkVersion')
 
-        # Min sdk
-        min_sdk = sdk_version(apk_path, 'minSdkVersion')
+            # Version Name
+            version_name = version_info_name(apk_path)
 
-        # Target sdk
-        target_sdk = sdk_version(apk_path, 'targetSdkVersion')
+            # Version Code
+            version_code = version_info_code(apk_path)
 
-        # Version Name
-        version_name = version_info_name(apk_path)
-
-        # Version Code
-        version_code = version_info_code(apk_path)
-
-        return {"apk": {'apkSize': apk_size,
-                        'appId': app_id,
-                        'methodCount': method_count,
-                        'minSdk': min_sdk,
-                        'permissions': permissions,
-                        'targetSdk': target_sdk,
-                        'versionCode': version_code,
-                        'versionName': version_name,
-                        'buildVariant': build_variant}}
+            return {"apk": {'apkSize': apk_size,
+                            'appId': app_id,
+                            'methodCount': method_count,
+                            'minSdk': min_sdk,
+                            'permissions': permissions,
+                            'targetSdk': target_sdk,
+                            'versionCode': version_code,
+                            'versionName': version_name,
+                            'buildVariant': build_variant}}
+        except:
+            logging.error('Constructing Apk info failed for module={} and build_variant={}'.format(main_module, build_variant))
+            raise
 
 
 def sdk_version(apk_path, name):
@@ -95,5 +96,23 @@ def read_property(apk_path, name):
         stdout=subprocess.PIPE
     ).stdout.read()
 
+
 def to_mb(byte, bsize=1024):
     return "{:.5}".format(float(byte / (bsize * bsize)))
+
+
+def look_for_apk_file(main_module, build_variant):
+    """
+    Look for the apk file in the following locations :
+        <main_module>/build/outputs/apk (expected default apk location)
+        current_working_directory/output-<build_variant> (monitise-mea location)
+    """
+    apk_path_alternatives = [os.path.join(main_module, 'build', 'outputs', 'apk'),
+                             os.path.join(os.getcwd(), 'output-' + build_variant)]
+
+    for alt in apk_path_alternatives:
+        apk_file = [i for i in os.listdir(alt) if re.match(r'.*' + build_variant + '.apk', i)]
+        if not len(apk_file) is 0:
+            return os.path.join(alt, apk_file[0])
+
+    return ""

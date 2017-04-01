@@ -1,7 +1,8 @@
 #!/usr/bin/python
 import json
-import sys
 import requests
+import sys
+import logging
 
 from datetime import datetime
 from apk_info import ApkInfo
@@ -12,29 +13,34 @@ from jenkins_info import JenkinsInfo
 def summarize():
     if len(sys.argv) > 3:
         for build_variant in sys.argv[3:]:
+            try:
+                # todo : yoksa ilgili build variant skip
 
-            summary = {}
+                summary = {}
 
-            # Build Info
-            summary.update(BuildInfo.fetch())
+                # Build Info
+                summary.update(BuildInfo.fetch())
 
-            # Apk Info
-            summary.update(ApkInfo.fetch(sys.argv[2], build_variant))
+                # Apk Info
+                summary.update(ApkInfo.fetch(sys.argv[2], build_variant))
 
-            # Jenkins info
-            summary.update(JenkinsInfo.fetch())
+                # Jenkins info
+                summary.update(JenkinsInfo.fetch())
 
-            # Date & Project Name
-            summary.update({'created': str(datetime.now()),
-                            'name': sys.argv[1]})
+                # Date & Project Name
+                summary.update({'created': str(datetime.now()),
+                                'name': sys.argv[1]})
 
-            # print summary
-            print json.dumps(summary, indent=4)
+                # print summary
+                print json.dumps(summary, indent=4)
 
-            # send it
-            requests.put('http://52.28.167.122/v1/projects',
-                         data=json.dumps(summary),
-                         headers={'Content-Type': 'application/json;charset=UTF-8'})
+                # send it
+                requests.put('http://stuff.me/v1/projects',
+                             data=json.dumps(summary),
+                             headers={'Content-Type': 'application/json;charset=UTF-8'})
+
+            except Exception as error:
+                logging.exception(error)
     else:
         help()
 
