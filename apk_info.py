@@ -111,8 +111,9 @@ def look_for_apk_file(main_module, build_variant):
                              os.path.join(os.getcwd(), 'output-' + build_variant)]
 
     for alt in apk_path_alternatives:
-        apk_file = [i for i in os.listdir(alt) if re.match(r'.*' + build_variant + '.apk', i)]
-        if not len(apk_file) is 0:
-            return os.path.join(alt, apk_file[0])
+        if os.path.exists(alt):
+            apk_file = [i for i in os.listdir(alt) if re.match(r'.*' + build_variant + '.apk', i)]
+            if not len(apk_file) is 0:
+                return os.path.join(alt, apk_file[0])
 
     return ""
