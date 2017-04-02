@@ -14,7 +14,7 @@ class ApkInfo:
             apk_path = look_for_apk_file(main_module, build_variant)
 
             if len(apk_path) is 0:
-                raise Exception('Can\'t find apk related to the given build variant {}'.format(build_variant))
+                raise Exception('Can\'t find apk for build variant={}'.format(build_variant))
 
             # method count
             classes_dex_folder = os.path.join(main_module, 'build', 'intermediates', 'dex', *build_variant.split('-'))
@@ -105,14 +105,14 @@ def look_for_apk_file(main_module, build_variant):
     """
     Look for the apk file in the following locations :
         <main_module>/build/outputs/apk (expected default apk location)
-        current_working_directory/output-<build_variant> (monitise-mea location)
+        <current_jenkins_working_directory>/output-<build_variant> (monitise-mea location)
     """
     apk_path_alternatives = [os.path.join(main_module, 'build', 'outputs', 'apk'),
                              os.path.join(os.getcwd(), 'output-' + build_variant)]
 
     for alt in apk_path_alternatives:
         if os.path.exists(alt):
-            apk_file = [i for i in os.listdir(alt) if re.match(r'.*' + build_variant + '.apk', i)]
+            apk_file = [i for i in os.listdir(alt) if re.match(r'.*' + build_variant + '.*.apk', i)]
             if not len(apk_file) is 0:
                 return os.path.join(alt, apk_file[0])
 

@@ -14,7 +14,6 @@ def summarize():
     if len(sys.argv) > 3:
         for build_variant in sys.argv[3:]:
             try:
-                # todo : yoksa ilgili build variant skip
 
                 summary = {}
 
